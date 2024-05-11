@@ -8,39 +8,14 @@ conn = sqlite3.connect('quizapp.db')
 cursor = conn.cursor()
 
 def register_user(username, password):
-    # Hash the password before storing it
-    hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-    cursor.execute("INSERT INTO users_tbl (username, password) VALUES (?, ?)", (username, hashed_password))
+    cursor.execute("INSERT INTO users_tbl (username, password) VALUES (?, ?)", (username, password))
     conn.commit()
-
 
 def authenticate_user(username, password):
-    cursor.execute("SELECT password FROM users_tbl WHERE username = ?", (username,))
-    result = cursor.fetchone()
-    if result:
-        hashed_password = result[0]
-        # Check if the entered password matches the hashed password
-        if bcrypt.checkpw(password.encode(), hashed_password):
-            return True
+    cursor.execute("SELECT * FROM users_tbl WHERE username = ? AND password = ?", (username, password))
+    if cursor.fetchone():
+        return True
     return False
-
-def register_user():
-    # Prompt the user to enter a username and password
-    username = input("Enter your username: ")
-    password = input("Enter your password: ")
-
-    # Hash the password before storing it
-    hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-    
-    # Insert the username and hashed password into the database
-    cursor.execute("INSERT INTO users_tbl (username, password) VALUES (?, ?)", (username, hashed_password))
-    conn.commit()
-
-# Example usage:
-register_user()
-
-
-asked_questions = []
 
 def fetch_random_question():
     while True:
@@ -50,7 +25,7 @@ def fetch_random_question():
         if question_id not in asked_questions:
             asked_questions.append(question_id)
             return question
-    
+asked_questions = []
 
 def run_quiz():
     score = 0
@@ -92,6 +67,38 @@ def run_quiz():
     percentage_score = (score / total_questions) * 100
     return percentage_score
 
-percentage_score = run_quiz()
-print("Quiz completed! Your score is:", f"{percentage_score}%")
+
+def main():
+    while True:
+        print("\n1. Register")
+        print("2. Login")
+        print("3. Exit")
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            username = input("Enter your username: ")
+            password = input("Enter your password: ")
+            register_user(username, password)
+            print("User registered successfully!")
+        elif choice == '2':
+            username = input("Enter your username: ")
+            password = input("Enter your password: ")
+            if authenticate_user(username, password):
+                print("Login successful!")
+                percentage_score = run_quiz()
+                print("Quiz completed! Your score is:", f"{percentage_score}%")
+            else:
+                print("Invalid username or password.")
+        elif choice == '3':
+            exit()
+        else:
+            print("Invalid choice. Please enter a valid option.")
+
+if __name__ == "__main__":
+    
+    main()
+
+
+
+
 conn.close()
