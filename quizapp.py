@@ -1,12 +1,13 @@
-import sqlite3 #importing database
-#import random  #importing random for random question.
-#Connection to database "quizapp.db"
+import sqlite3
+import datetime
+
+# Connection to database "quizapp.db"
 conn = sqlite3.connect('quizapp.db') 
 
-#create a cursor
+# Create a cursor
 cursor = conn.cursor()
 
-#User registration function user input usernam and password and store to users_tbl table
+# User registration function: user input username and password and store to users_tbl table
 def register_user(username, password):
     # Check if the username already exists
     cursor.execute("SELECT COUNT(*) FROM users_tbl WHERE username = ?", (username,))
@@ -22,15 +23,14 @@ def register_user(username, password):
     if cursor.rowcount > 0:
         print("User registered successfully.")
 
-
-#Login authentication funtion to check if username and password is in the users_tbl table.
+# Login authentication function: check if username and password are in the users_tbl table
 def authenticate_user(username, password):
     cursor.execute("SELECT * FROM users_tbl WHERE username = ? AND password = ?", (username, password))
     if cursor.fetchone():
         return True
     return False
 
-#Function to make sure that question is randomly selected and not repeated.
+# Function to make sure that question is randomly selected and not repeated
 def fetch_random_question():
     while True:
         cursor.execute("SELECT * FROM quiz_tbl ORDER BY RANDOM() LIMIT 1")
@@ -41,8 +41,8 @@ def fetch_random_question():
             return question
 asked_questions = []
 
-#Funtion to run the quiz application
-def run_quiz():
+# Function to run the quiz application
+def run_quiz(username):
     score = 0
     total_questions = 10  # Number of questions to ask.
     for i in range(total_questions):
@@ -69,7 +69,6 @@ def run_quiz():
             else:
                 print("Invalid input. Please enter a number between 1 and 4.")
     
-        
         # Validate user answer.
         if user_answer_str == correct_answer:
             print("Correct!")
@@ -79,11 +78,19 @@ def run_quiz():
             print(f"Correct answer is: {correct_answer}")
         print()
         
-    percentage_score = (score / total_questions) * 100 #Score computation
+    percentage_score = (score / total_questions) * 100 # Score computation
+    
+    # Log quiz summary
+    log_quiz_summary(username, percentage_score)
     return percentage_score
 
+# Function to log quiz summary
+def log_quiz_summary(username, percentage_score):
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("quiz_summary.txt", "a") as file:
+        file.write(f"Username: {username}, Score: {percentage_score}%, Time: {current_time}\n")
 
-#Quiz application index where user will be ask to register, login or exit. 
+# Quiz application index where user will be asked to register, login or exit. 
 def index():
     while True:
         print("\n1. Register")
@@ -95,14 +102,15 @@ def index():
             username = input("Enter your username: ")
             password = input("Enter your password: ")
             register_user(username, password)
-            #print("User registered successfully!")
+            # print("User registered successfully!")
         elif choice == '2':
             username = input("Enter your username: ")
             password = input("Enter your password: ")
             if authenticate_user(username, password):
                 print("Login successful!")
-                percentage_score = run_quiz() #Run the quiz application after sucessful login. 
+                percentage_score = run_quiz(username) # Run the quiz application after successful login
                 print("Quiz completed! Your score is:", f"{percentage_score}%")
+                
             else:
                 print("Invalid username or password.")
         elif choice == '3':
@@ -110,11 +118,8 @@ def index():
         else:
             print("Invalid choice. Please enter a valid option.")
 
+
+
 if __name__ == "__main__":
-    
     index()
-
-
-
-
-conn.close()
+    conn.close()
