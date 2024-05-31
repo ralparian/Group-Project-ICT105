@@ -1,5 +1,5 @@
 import sqlite3 #importing database
-import random  #importing random for random question.
+#import random  #importing random for random question.
 #Connection to database "quizapp.db"
 conn = sqlite3.connect('quizapp.db') 
 
@@ -8,8 +8,20 @@ cursor = conn.cursor()
 
 #User registration function user input usernam and password and store to users_tbl table
 def register_user(username, password):
+    # Check if the username already exists
+    cursor.execute("SELECT COUNT(*) FROM users_tbl WHERE username = ?", (username,))
+    count = cursor.fetchone()[0]
+    if count > 0:
+        print("Username already exists. Please choose a different username.")
+        return
+    
+    # If the username doesn't exist, insert the new user
     cursor.execute("INSERT INTO users_tbl (username, password) VALUES (?, ?)", (username, password))
     conn.commit()
+    # Only print "User registered successfully." if a new user was successfully inserted
+    if cursor.rowcount > 0:
+        print("User registered successfully.")
+
 
 #Login authentication funtion to check if username and password is in the users_tbl table.
 def authenticate_user(username, password):
@@ -72,18 +84,18 @@ def run_quiz():
 
 
 #Quiz application index where user will be ask to register, login or exit. 
-def main():
+def index():
     while True:
         print("\n1. Register")
         print("2. Login")
         print("3. Exit")
-        choice = input("Enter your choice: ")
+        choice = input("Enter your choice:[1, 2, 3] ")
 
         if choice == '1':
             username = input("Enter your username: ")
             password = input("Enter your password: ")
             register_user(username, password)
-            print("User registered successfully!")
+            #print("User registered successfully!")
         elif choice == '2':
             username = input("Enter your username: ")
             password = input("Enter your password: ")
@@ -100,7 +112,7 @@ def main():
 
 if __name__ == "__main__":
     
-    main()
+    index()
 
 
 
